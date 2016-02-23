@@ -1,0 +1,28 @@
+name: GateKeeper
+author: onebone
+version: "1.0.0-SNAPSHOT"
+main: me.onebone.gatekeeper.GateKeeper
+api: [1.0.0]
+commands:
+ login:
+  description: "Logs in to the server"
+  usage: "/login <password>"
+  permission: gatekeeper.command.login
+ register:
+  description: "Registers to the server"
+  usage: "/register <password> <password>"
+  permission: gatekeeper.command.register
+  
+permissions:
+ gatekeeper:
+  description: "Includes all of GateKeeper permissions"
+  children:
+   gatekeeper.command:
+    description: "Includes all permission to use GateKeeper commands"
+    children:
+     gatekeeper.command.login:
+      description: "Allows player to use /login command"
+      default: true
+     gatekeeper.command.register:
+      description: "Allows player to use /register command"
+      default: true

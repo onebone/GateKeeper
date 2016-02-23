@@ -1,0 +1,5 @@
+movement:
+  allow-move: false
+password:
+  min-length: 4
+  max-length: 20
