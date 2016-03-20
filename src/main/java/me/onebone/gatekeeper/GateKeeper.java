@@ -288,7 +288,7 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onDamage(EntityDamageEvent event){
 		if(event.getEntity() instanceof Player){
 			Player player = (Player) event.getEntity();
-			if(this.isLoggedIn(player)){
+			if(!this.isLoggedIn(player)){
 				event.setCancelled();
 			}
 		}
