@@ -200,7 +200,15 @@ public class GateKeeper extends PluginBase implements Listener{
 	
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event){
-		this.setLoggedOut(event.getPlayer());
+		Player player = event.getPlayer();
+		
+		this.setLoggedOut(player);
+		
+		if(this.provider.playerExists(player)){
+			player.sendMessage(TextFormat.YELLOW + "Please login to server using /login <password>");
+		}else{
+			player.sendMessage(TextFormat.YELLOW + "Please register to server using /register <password> <password>");
+		}
 	}
 	
 	@EventHandler
