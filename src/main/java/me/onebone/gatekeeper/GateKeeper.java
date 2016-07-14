@@ -179,7 +179,7 @@ public class GateKeeper extends PluginBase implements Listener{
 		return false;
 	}
 	
-	public static String hash(Player player, String password){
+	public String hash(Player player, String password){
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-512");
 			md.update((player.getName().toLowerCase() + password).getBytes());
@@ -187,7 +187,12 @@ public class GateKeeper extends PluginBase implements Listener{
 			
 			StringBuilder builder = new StringBuilder();
 			for(int i = 0; i < result.length; i++){
-				String str = Integer.toHexString(new Byte(result[i]));
+				String str;
+				if(!this.getConfig().getBoolean("data.old", false)){
+					str = Integer.toHexString(new Byte(result[i]) & 0xff);
+				}else{
+					str = Integer.toHexString(new Byte(result[i]));
+				}
 				if(str.length() < 2){
 					str = "0" + str;
 				}
@@ -219,7 +224,7 @@ public class GateKeeper extends PluginBase implements Listener{
 		this.setLoggedOut(player);
 		
 		if(this.provider.playerExists(player)){
-			if(this.tryLogin(player)){
+			if(this.getConfig().getBoolean("auto.login", true) && this.tryLogin(player)){
 				player.sendMessage(TextFormat.GREEN + "You have logged in successfully.");
 			}else{
 				player.sendMessage(TextFormat.YELLOW + "Please login to server using /login <password>");
