@@ -26,6 +26,7 @@ public interface Provider{
 	public void addPlayer(Player player, String hash);
 	public boolean playerExists(Player player);
 	public void setPlayer(Player player, String hash);
+	public void setPlayer(Player player);
 	public Map<String, Object> getPlayer(Player player);
 	public void removePlayer(Player player);
 	public void save();

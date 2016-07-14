@@ -19,12 +19,12 @@ package me.onebone.gatekeeper.provider;
  */
 
 import java.io.File;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import me.onebone.gatekeeper.GateKeeper;
 import cn.nukkit.Player;
 import cn.nukkit.utils.Config;
+import cn.nukkit.utils.ConfigSection;
 
 public class YamlProvider implements Provider{
 	private File baseFolder;
@@ -39,11 +39,12 @@ public class YamlProvider implements Provider{
 	@SuppressWarnings("serial")
 	@Override
 	public void addPlayer(Player player, String hash){
-		new Config(new File(this.baseFolder, player.getName().toLowerCase() + ".yml"), Config.YAML, new LinkedHashMap<String, Object>(){
+		new Config(new File(this.baseFolder, player.getName().toLowerCase() + ".yml"), Config.YAML, new ConfigSection(){
 			{
 				put("registered", System.currentTimeMillis());
 				put("lastJoined", System.currentTimeMillis());
 				put("lastIP", player.getAddress());
+				put("uuid", player.getUniqueId().toString());
 				put("hash", hash);
 			}
 		});
@@ -51,7 +52,31 @@ public class YamlProvider implements Provider{
 	
 	@Override
 	public void setPlayer(Player player, String hash){
-		// TODO
+		File file = new File(this.baseFolder, player.getName().toLowerCase() + ".yml");
+		if(file.isFile()){
+			Config config = new Config(new File(this.baseFolder, player.getName().toLowerCase() + ".yml"), Config.YAML);
+			
+			config.set("lastJoined", System.currentTimeMillis());
+			config.set("lastIP", player.getAddress());
+			config.set("uuid", player.getUniqueId().toString());
+			config.set("hash", hash);
+			
+			config.save();
+		}
+	}
+	
+	@Override
+	public void setPlayer(Player player){
+		File file = new File(this.baseFolder, player.getName().toLowerCase() + ".yml");
+		if(file.isFile()){
+			Config config = new Config(new File(this.baseFolder, player.getName().toLowerCase() + ".yml"), Config.YAML);
+			
+			config.set("lastJoined", System.currentTimeMillis());
+			config.set("lastIP", player.getAddress());
+			config.set("uuid", player.getUniqueId().toString());
+			
+			config.save();
+		}
 	}
 	
 	@Override

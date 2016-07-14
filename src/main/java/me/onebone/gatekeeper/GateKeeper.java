@@ -98,6 +98,8 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void setLoggedIn(Player player){
 		player.removeAttachment(this.attachments.get(player));
 		
+		this.provider.setPlayer(player);
+		
 		this.attachments.remove(player);
 		task.removePlayer(player);
 	}
@@ -198,6 +200,18 @@ public class GateKeeper extends PluginBase implements Listener{
 		return null;
 	}
 	
+	public boolean tryLogin(Player player){
+		Map<String, Object> map = this.provider.getPlayer(player);
+		if(map.getOrDefault("lastIP", "127.0.0.1").equals(player.getAddress())
+			&& player.getUniqueId().toString().equals(map.get("uuid"))){
+			this.setLoggedIn(player);
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event){
 		Player player = event.getPlayer();
@@ -205,7 +219,11 @@ public class GateKeeper extends PluginBase implements Listener{
 		this.setLoggedOut(player);
 		
 		if(this.provider.playerExists(player)){
-			player.sendMessage(TextFormat.YELLOW + "Please login to server using /login <password>");
+			if(this.tryLogin(player)){
+				player.sendMessage(TextFormat.GREEN + "You have logged in successfully.");
+			}else{
+				player.sendMessage(TextFormat.YELLOW + "Please login to server using /login <password>");
+			}
 		}else{
 			player.sendMessage(TextFormat.YELLOW + "Please register to server using /register <password> <password>");
 		}
