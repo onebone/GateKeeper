@@ -47,6 +47,7 @@ import cn.nukkit.event.player.PlayerItemConsumeEvent;
 import cn.nukkit.event.player.PlayerItemHeldEvent;
 import cn.nukkit.event.player.PlayerJoinEvent;
 import cn.nukkit.event.player.PlayerMoveEvent;
+import cn.nukkit.event.player.PlayerPreLoginEvent;
 import cn.nukkit.event.player.PlayerQuitEvent;
 import cn.nukkit.event.player.PlayerToggleSneakEvent;
 import cn.nukkit.event.player.PlayerToggleSprintEvent;
@@ -215,6 +216,21 @@ public class GateKeeper extends PluginBase implements Listener{
 		}
 		
 		return false;
+	}
+	
+	@EventHandler
+	public void onPreLogin(PlayerPreLoginEvent event){
+		if(!this.getConfig().get("session.single", true)) return; 
+		
+		Player player = event.getPlayer();
+		
+		for(Player online : this.getServer().getOnlinePlayers().values()){
+			if(online != player && online.getName().toLowerCase().equals(player.getName().toLowerCase()) && this.isLoggedIn(online)){
+				event.setCancelled();
+				player.kick("already logged in");
+				return;
+			}
+		}
 	}
 	
 	@EventHandler

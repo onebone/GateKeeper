@@ -5,5 +5,7 @@ password:
   max-length: 20
 auto:
   login: true
+session:
+  single: true
 data:
   old: false
