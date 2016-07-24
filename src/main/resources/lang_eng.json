@@ -1,0 +1,14 @@
+{
+	"already-logged-in": "&4You are already logged in.",
+	"register-to-server": "&ePlease register to server using /register <password> <password>",
+	"login-to-server": "&ePlease login to server using /login <password>",
+	"logged-in": "&2You have logged in successfully.",
+	"incorrect-password": "&4Incorrect password was given.",
+	"already-registered": "&4You are already registered.",
+	"confirm-password": "&4Please confirm password correctly.",
+	"password-too-short": "&4Your password seems too short.",
+	"password-too-long": "&4Your password seems too long.",
+	"register-complete": "&2You have successfully registered to server.",
+	
+	"please-login": "&2Please login first."
+}

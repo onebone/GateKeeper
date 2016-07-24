@@ -8,4 +8,5 @@ auto:
 session:
   single: true
 data:
+  language: eng
   old: false

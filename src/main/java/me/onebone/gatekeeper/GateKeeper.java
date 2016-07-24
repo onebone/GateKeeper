@@ -18,11 +18,18 @@ package me.onebone.gatekeeper;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 import me.onebone.gatekeeper.provider.Provider;
 import me.onebone.gatekeeper.provider.YamlProvider;
@@ -31,6 +38,7 @@ import cn.nukkit.command.Command;
 import cn.nukkit.command.CommandSender;
 import cn.nukkit.event.EventHandler;
 import cn.nukkit.event.Listener;
+import cn.nukkit.event.TranslationContainer;
 import cn.nukkit.event.block.BlockBreakEvent;
 import cn.nukkit.event.block.BlockPlaceEvent;
 import cn.nukkit.event.entity.EntityDamageEvent;
@@ -55,6 +63,7 @@ import cn.nukkit.inventory.InventoryHolder;
 import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.permission.PermissionAttachment;
 import cn.nukkit.utils.TextFormat;
+import cn.nukkit.utils.Utils;
 
 public class GateKeeper extends PluginBase implements Listener{
 	private HashMap<Player, PermissionAttachment> attachments;
@@ -62,8 +71,72 @@ public class GateKeeper extends PluginBase implements Listener{
 	private Provider provider;
 	private SendTipTask task;
 	
+	private Map<String, String> lang;
+	
+	public String getMessage(String key, Object... params){
+		if(this.lang.containsKey(key)){
+			return replaceMessage(this.lang.get(key), params);
+		}
+		return "Could not find message with " + key;
+	}
+	
+	private String replaceMessage(String lang, Object[] params){
+		StringBuilder builder = new StringBuilder();
+		
+		for(int i = 0; i < lang.length(); i++){
+			char c = lang.charAt(i);
+			if(c == '{'){
+				int index;
+				if((index = lang.indexOf('}', i)) != -1){
+					try{
+						String p = lang.substring(i + 1, index);
+						int param = Integer.parseInt(p);
+						
+						if(params.length > param){
+							i = index;
+							
+							builder.append(params[param]);
+							continue;
+						}
+					}catch(NumberFormatException e){}
+				}
+			}
+			
+			builder.append(c);
+		}
+		
+		return TextFormat.colorize(builder.toString());
+	}
+	
 	public void onEnable(){
 		this.saveDefaultConfig();
+		
+		String name = this.getConfig().get("data.language", "eng");
+		InputStream is = this.getResource("lang_" + name + ".json");
+		if(is == null){
+			this.getLogger().critical("Could not load language file. Changing to default.");
+			
+			is = this.getResource("lang_eng.json");
+		}
+		
+		try{
+			lang = new GsonBuilder().create().fromJson(Utils.readFile(is), new TypeToken<LinkedHashMap<String, String>>(){}.getType());
+		}catch(JsonSyntaxException | IOException e){
+			this.getLogger().critical(e.getMessage());
+		}
+		
+		if(!name.equals("eng")){
+			try{
+				LinkedHashMap<String, String> temp = new GsonBuilder().create().fromJson(Utils.readFile(this.getResource("lang_eng.json")), new TypeToken<LinkedHashMap<String, String>>(){}.getType());
+				temp.forEach((k, v) -> {
+					if(!lang.containsKey(k)){
+						lang.put(k, v);
+					}
+				});
+			}catch(IOException e){
+				this.getLogger().critical(e.getMessage());
+			}
+		}
 		
 		attachments = new HashMap<>();
 		
@@ -112,68 +185,68 @@ public class GateKeeper extends PluginBase implements Listener{
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
 		if(command.getName().equals("login")){
 			if(!(sender instanceof Player)){
-				sender.sendMessage(TextFormat.RED + "Please run this command in-game.");
+				sender.sendMessage(new TranslationContainer(TextFormat.RED + "%commands.generic.ingame"));
 				return true;
 			}
 
 			if(args.length < 1){
-				sender.sendMessage(TextFormat.RED + "Usage: " + command.getUsage());
+				sender.sendMessage(new TranslationContainer(TextFormat.RED + "%commands.generic.usage", command.getUsage()));
 				return true;
 			}
 			Player player = (Player) sender;
 			
 			if(this.isLoggedIn(player)){
-				sender.sendMessage(TextFormat.RED + "You are already logged in.");
+				sender.sendMessage(this.getMessage("already-logged-in"));
 				return true;
 			}
 			Map<String, Object> data;
 			if((data = this.provider.getPlayer(player)) == null){
-				sender.sendMessage(TextFormat.RED + "Please register to the server using /register <password> <password>");
+				sender.sendMessage(this.getMessage("register-to-server"));
 				return true;
 			}
 			
 			if(data.get("hash").equals(hash(player, args[0]))){
 				this.setLoggedIn(player);
-				sender.sendMessage(TextFormat.GREEN + "You have logged in successfully.");
+				sender.sendMessage(this.getMessage("logged-in"));
 			}else{
-				sender.sendMessage(TextFormat.RED + "Incorrect password was given.");
+				sender.sendMessage(this.getMessage("incorrect-password"));
 			}
 			return true;
 		}else if(command.getName().equals("register")){
 			if(!(sender instanceof Player)){
-				sender.sendMessage(TextFormat.RED + "Please run this command in-game.");
+				sender.sendMessage(new TranslationContainer(TextFormat.RED + "%commands.generic.ingame"));
 				return true;
 			}
 			
 			if(args.length < 2){
-				sender.sendMessage(TextFormat.RED + "Usage: " + command.getUsage());
+				sender.sendMessage(new TranslationContainer(TextFormat.RED + "%commands.generic.usage", command.getUsage()));
 				return true;
 			}
 			Player player = (Player) sender;
 			
 			if(this.provider.playerExists(player)){
-				sender.sendMessage(TextFormat.RED + "You have already registered.");
+				sender.sendMessage(this.getMessage("already-registered"));
 				return true;
 			}
 			
 			if(!args[0].equals(args[1])){
-				sender.sendMessage(TextFormat.RED + "Please confirm your password correctly.");
+				sender.sendMessage(this.getMessage("confirm-password"));
 				return true;
 			}
 			
 			String password = args[0];
 			if(password.length() < this.getConfig().get("password.min-length", 4)){
-				sender.sendMessage(TextFormat.RED + "Your password is too short.");
+				sender.sendMessage(this.getMessage("password-too-short"));
 				return true;
 			}
 			if(password.length() > this.getConfig().get("password.max-length", 20)){
-				sender.sendMessage(TextFormat.RED + "You password is too long.");
+				sender.sendMessage(this.getMessage("password-too-long"));
 				return true;
 			}
 			
 			this.provider.addPlayer(player, hash(player, password));
 			
-			sender.sendMessage(TextFormat.GREEN + "You have successfully registered to the server.");
+			sender.sendMessage(this.getMessage("register-complete"));
 			this.setLoggedIn(player);
 			return true;
 		}
@@ -241,12 +314,12 @@ public class GateKeeper extends PluginBase implements Listener{
 		
 		if(this.provider.playerExists(player)){
 			if(this.getConfig().getBoolean("auto.login", true) && this.tryLogin(player)){
-				player.sendMessage(TextFormat.GREEN + "You have logged in successfully.");
+				player.sendMessage(this.getMessage("logged-in"));
 			}else{
-				player.sendMessage(TextFormat.YELLOW + "Please login to server using /login <password>");
+				player.sendMessage(this.getMessage("login-to-server"));
 			}
 		}else{
-			player.sendMessage(TextFormat.YELLOW + "Please register to server using /register <password> <password>");
+			player.sendMessage(this.getMessage("register-to-server"));
 		}
 	}
 	
@@ -259,7 +332,7 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onChat(PlayerChatEvent event){
 		if(!this.isLoggedIn(event.getPlayer())){
 			event.setCancelled();
-			event.getPlayer().sendMessage(TextFormat.RED + "Please login first.");
+			event.getPlayer().sendMessage(this.getMessage("please-login"));
 		}
 	}
 	
@@ -268,7 +341,7 @@ public class GateKeeper extends PluginBase implements Listener{
 		String message = event.getMessage();
 		if(!this.isLoggedIn(event.getPlayer()) && !message.startsWith("/login") && !message.startsWith("/register") && !message.startsWith(("/help"))){
 			event.setCancelled();
-			event.getPlayer().sendMessage(TextFormat.RED + "Please login first.");
+			event.getPlayer().sendMessage(this.getMessage("please-login"));
 		}
 	}
 	
@@ -387,7 +460,7 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onPlace(BlockPlaceEvent event){
 		if(!this.isLoggedIn(event.getPlayer())){
 			event.setCancelled();
-			event.getPlayer().sendMessage(TextFormat.RED + "Please login first.");
+			event.getPlayer().sendMessage(this.getMessage("please-login"));
 		}
 	}
 }
