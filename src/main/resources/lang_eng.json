@@ -10,6 +10,7 @@
 	"password-too-long": "&4Your password seems too long.",
 	"register-complete": "&2You have successfully registered to server.",
 	"logged-out": "&2You have logged out from server.",
+	"changed-password": "&2Changed password of {0}.",
 	
 	"please-login": "&4Please login first."
 }

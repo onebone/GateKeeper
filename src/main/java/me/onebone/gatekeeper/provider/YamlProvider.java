@@ -66,6 +66,18 @@ public class YamlProvider implements Provider{
 	}
 	
 	@Override
+	public void setPlayer(String player, String hash){
+		File file = new File(this.baseFolder, player.toLowerCase() + ".yml");
+		if(file.isFile()){
+			Config config = new Config(new File(this.baseFolder, player.toLowerCase() + ".yml"), Config.YAML);
+			
+			config.set("hash", hash);
+			
+			config.save();
+		}
+	}
+	
+	@Override
 	public void setPlayer(Player player){
 		File file = new File(this.baseFolder, player.getName().toLowerCase() + ".yml");
 		if(file.isFile()){

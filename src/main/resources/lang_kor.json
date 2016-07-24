@@ -10,6 +10,7 @@
 	"password-too-long": "&4비밀번호가 너무 깁니다.",
 	"register-complete": "&2서버에 성공적으로 가입하였습니다.",
 	"logged-out": "&2서버에서 로그아웃 하였습니다.",
+	"changed-password": "&2{0}님의 비밀번호가 변경되었습니다.",
 	
 	"please-login": "&4먼저 로그인 해주세요."
 }

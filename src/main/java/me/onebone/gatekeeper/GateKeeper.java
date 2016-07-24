@@ -265,14 +265,54 @@ public class GateKeeper extends PluginBase implements Listener{
 			this.setLoggedOut(player);
 			player.sendMessage(this.getMessage("logged-out"));
 			return true;
+		}else if(command.getName().equals("cpw")){
+			String target = sender.getName();
+			if(args.length < 2){
+				return false;
+			}else if(args.length == 2){
+				if(!(sender instanceof Player)){
+					sender.sendMessage(new TranslationContainer(TextFormat.RED + "%commands.generic.ingame"));
+					return true;
+				}
+			}else{
+				if(sender.hasPermission("gatekeeper.admin")){
+					target = args[2];
+				}else{
+					sender.sendMessage(new TranslationContainer(TextFormat.RED + "%commands.generic.permission"));
+					return true;
+				}
+			}
+			
+			if(!args[0].equals(args[1])){
+				sender.sendMessage(this.getMessage("confirm-password"));
+				return true;
+			}
+			
+			String password = args[0];
+			if(password.length() < this.getConfig().get("password.min-length", 4)){
+				sender.sendMessage(this.getMessage("password-too-short"));
+				return true;
+			}
+			if(password.length() > this.getConfig().get("password.max-length", 20)){
+				sender.sendMessage(this.getMessage("password-too-long"));
+				return true;
+			}
+			
+			this.provider.setPlayer(target, hash(target, password));
+			sender.sendMessage(this.getMessage("changed-password", target));
+			return true;
 		}
 		return false;
 	}
 	
 	public String hash(Player player, String password){
+		return hash(player.getName(), password);
+	}
+	
+	public String hash(String player, String password){
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-512");
-			md.update((player.getName().toLowerCase() + password).getBytes());
+			md.update((player.toLowerCase() + password).getBytes());
 			byte[] result = md.digest();
 			
 			StringBuilder builder = new StringBuilder();

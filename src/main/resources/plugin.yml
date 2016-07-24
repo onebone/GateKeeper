@@ -16,11 +16,17 @@ commands:
   description: "Logout from the server"
   usage: /logout
   permission: gatekeeper.command.logout
+ cpw:
+  description: "Change password"
+  usage: /cpw <password> <password> [player]
+  permission: gatekeeper.command.cpw
   
 permissions:
  gatekeeper:
   description: "Includes all of GateKeeper permissions"
   children:
+   gatekeeper.admin:
+    description: "Designate player as admin of GateKeeper"
    gatekeeper.command:
     description: "Includes all permission to use GateKeeper commands"
     children:
@@ -32,4 +38,7 @@ permissions:
       default: true
      gatekeeper.command.logout:
       description: "Allows player to use /logout"
+      default: true
+     gatekeeper.command.cpw:
+      description: "Allows player to use /cpw"
       default: true
