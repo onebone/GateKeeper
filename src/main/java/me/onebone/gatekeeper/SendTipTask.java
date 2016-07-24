@@ -46,6 +46,6 @@ public class SendTipTask extends PluginTask<GateKeeper>{
 
 	@Override
 	public void onRun(int arg0){
-		this.players.forEach((player) -> player.sendTip(TextFormat.RED + "Please login first."));
+		this.players.forEach((player) -> player.sendTip(this.getOwner().getMessage("please-login")));
 	}
 }
