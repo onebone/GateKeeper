@@ -12,6 +12,10 @@ commands:
   description: "Registers to the server"
   usage: "/register <password> <password>"
   permission: gatekeeper.command.register
+ logout:
+  description: "Logout from the server"
+  usage: /logout
+  permission: gatekeeper.command.logout
   
 permissions:
  gatekeeper:
@@ -21,8 +25,11 @@ permissions:
     description: "Includes all permission to use GateKeeper commands"
     children:
      gatekeeper.command.login:
-      description: "Allows player to use /login command"
+      description: "Allows player to use /login"
       default: true
      gatekeeper.command.register:
-      description: "Allows player to use /register command"
+      description: "Allows player to use /register"
+      default: true
+     gatekeeper.command.logout:
+      description: "Allows player to use /logout"
       default: true

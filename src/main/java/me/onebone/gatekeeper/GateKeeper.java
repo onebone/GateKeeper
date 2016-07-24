@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -249,6 +250,21 @@ public class GateKeeper extends PluginBase implements Listener{
 			sender.sendMessage(this.getMessage("register-complete"));
 			this.setLoggedIn(player);
 			return true;
+		}else if(command.getName().equals("logout")){
+			if(!(sender instanceof Player)){
+				sender.sendMessage(new TranslationContainer(TextFormat.RED + "%commands.generic.ingame"));
+				return true;
+			}
+			
+			Player player = (Player) sender;
+			if(!this.isLoggedIn(player)){
+				player.sendMessage(this.getMessage("please-login"));
+				return true;
+			}
+			
+			this.setLoggedOut(player);
+			player.sendMessage(this.getMessage("logged-out"));
+			return true;
 		}
 		return false;
 	}
@@ -336,10 +352,13 @@ public class GateKeeper extends PluginBase implements Listener{
 		}
 	}
 	
+	@SuppressWarnings("serial")
 	@EventHandler
 	public void onCommandPreProcess(PlayerCommandPreprocessEvent event){
 		String message = event.getMessage();
-		if(!this.isLoggedIn(event.getPlayer()) && !message.startsWith("/login") && !message.startsWith("/register") && !message.startsWith(("/help"))){
+		if(!this.isLoggedIn(event.getPlayer()) && !this.getConfig().getList("allow.commands", new ArrayList<String>(){
+			{add("login"); add("register"); add("help");}
+		}).contains(message.split(" ")[0].substring(1))){
 			event.setCancelled();
 			event.getPlayer().sendMessage(this.getMessage("please-login"));
 		}

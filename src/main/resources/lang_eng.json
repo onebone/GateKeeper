@@ -9,6 +9,7 @@
 	"password-too-short": "&4Your password seems too short.",
 	"password-too-long": "&4Your password seems too long.",
 	"register-complete": "&2You have successfully registered to server.",
+	"logged-out": "&2You have logged out from server.",
 	
-	"please-login": "&2Please login first."
+	"please-login": "&4Please login first."
 }
