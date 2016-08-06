@@ -21,15 +21,15 @@ package me.onebone.gatekeeper.provider;
 import java.io.File;
 import java.util.Map;
 
-import me.onebone.gatekeeper.GateKeeper;
 import cn.nukkit.Player;
+import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.ConfigSection;
 
 public class YamlProvider implements Provider{
 	private File baseFolder;
 	
-	public YamlProvider(GateKeeper plugin){
+	public YamlProvider(PluginBase plugin){
 		this.baseFolder = new File(plugin.getDataFolder(), "players");
 		if(!baseFolder.exists()){
 			baseFolder.mkdir();
@@ -114,8 +114,8 @@ public class YamlProvider implements Provider{
 	}
 
 	@Override
-	public boolean playerExists(Player player){
-		File file = new File(this.baseFolder, player.getName().toLowerCase() + ".yml");
+	public boolean playerExists(String player){
+		File file = new File(this.baseFolder, player.toLowerCase() + ".yml");
 		
 		return file.isFile();
 	}

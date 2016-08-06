@@ -26,20 +26,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-import me.onebone.gatekeeper.provider.Provider;
-import me.onebone.gatekeeper.provider.YamlProvider;
+import me.onebone.gatekeeper.manager.DefaultManager;
+import me.onebone.gatekeeper.manager.Manager;
 import cn.nukkit.Player;
 import cn.nukkit.command.Command;
 import cn.nukkit.command.CommandSender;
 import cn.nukkit.event.EventHandler;
 import cn.nukkit.event.Listener;
-import cn.nukkit.event.TranslationContainer;
 import cn.nukkit.event.block.BlockBreakEvent;
 import cn.nukkit.event.block.BlockPlaceEvent;
 import cn.nukkit.event.entity.EntityDamageEvent;
@@ -61,6 +59,7 @@ import cn.nukkit.event.player.PlayerQuitEvent;
 import cn.nukkit.event.player.PlayerToggleSneakEvent;
 import cn.nukkit.event.player.PlayerToggleSprintEvent;
 import cn.nukkit.inventory.InventoryHolder;
+import cn.nukkit.lang.TranslationContainer;
 import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.permission.PermissionAttachment;
 import cn.nukkit.utils.TextFormat;
@@ -69,10 +68,17 @@ import cn.nukkit.utils.Utils;
 public class GateKeeper extends PluginBase implements Listener{
 	private HashMap<Player, PermissionAttachment> attachments;
 	
-	private Provider provider;
-	private SendTipTask task;
+	private Manager manager;
 	
 	private Map<String, String> lang;
+	
+	public boolean setManager(Manager manager){
+		if(this.manager == null){
+			this.manager = manager;
+			return true;
+		}
+		return false;
+	}
 	
 	public String getMessage(String key, Object... params){
 		if(this.lang.containsKey(key)){
@@ -141,46 +147,9 @@ public class GateKeeper extends PluginBase implements Listener{
 		
 		attachments = new HashMap<>();
 		
-		this.provider = new YamlProvider(this);
+		this.setManager(new DefaultManager(this));
 		
-		this.getServer().getScheduler().scheduleDelayedRepeatingTask(task = new SendTipTask(this), 10, 10);	
 		this.getServer().getPluginManager().registerEvents(this, this);
-	}
-	
-	public void removePermisions(Player player){
-		PermissionAttachment attachment = player.addAttachment(this);
-		
-		TreeMap<String, Boolean> permissions = new TreeMap<String, Boolean>(new PermissionComparator());
-		this.getServer().getPluginManager().getPermissions().forEach((k, v) -> {
-			permissions.put(k, false);
-		});
-		permissions.put("nukkit.command.help", true);
-		
-		permissions.put("gatekeeper.command.login", true);
-		permissions.put("gatekeeper.command.register", true);
-		
-		attachment.setPermissions(permissions);
-		
-		this.attachments.put(player, attachment);
-	}
-	
-	public void setLoggedOut(Player player){
-		this.removePermisions(player);
-		
-		task.addPlayer(player);
-	}
-	
-	public void setLoggedIn(Player player){
-		player.removeAttachment(this.attachments.get(player));
-		
-		this.provider.setPlayer(player);
-		
-		this.attachments.remove(player);
-		task.removePlayer(player);
-	}
-	
-	public boolean isLoggedIn(Player player){
-		return !attachments.containsKey(player);
 	}
 	
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
@@ -196,18 +165,17 @@ public class GateKeeper extends PluginBase implements Listener{
 			}
 			Player player = (Player) sender;
 			
-			if(this.isLoggedIn(player)){
+			if(this.manager.isAuthenticated(player)){
 				sender.sendMessage(this.getMessage("already-logged-in"));
 				return true;
 			}
-			Map<String, Object> data;
-			if((data = this.provider.getPlayer(player)) == null){
+			
+			if(this.manager.isRegistered(player.getName())){
 				sender.sendMessage(this.getMessage("register-to-server"));
 				return true;
 			}
 			
-			if(data.get("hash").equals(hash(player, args[0]))){
-				this.setLoggedIn(player);
+			if(this.manager.authenticate(player, args[0])){
 				sender.sendMessage(this.getMessage("logged-in"));
 			}else{
 				sender.sendMessage(this.getMessage("incorrect-password"));
@@ -225,7 +193,7 @@ public class GateKeeper extends PluginBase implements Listener{
 			}
 			Player player = (Player) sender;
 			
-			if(this.provider.playerExists(player)){
+			if(this.manager.isRegistered(player.getName())){
 				sender.sendMessage(this.getMessage("already-registered"));
 				return true;
 			}
@@ -245,10 +213,14 @@ public class GateKeeper extends PluginBase implements Listener{
 				return true;
 			}
 			
-			this.provider.addPlayer(player, hash(player, password));
+			this.manager.registerPlayer(player, password);
 			
 			sender.sendMessage(this.getMessage("register-complete"));
-			this.setLoggedIn(player);
+			if(this.manager.setAuthenticated((Player) sender)){
+				player.sendMessage(this.getMessage("login-to-server"));
+			}else{
+				player.sendMessage(this.getMessage("logged-in"));
+			}
 			return true;
 		}else if(command.getName().equals("logout")){
 			if(!(sender instanceof Player)){
@@ -257,13 +229,16 @@ public class GateKeeper extends PluginBase implements Listener{
 			}
 			
 			Player player = (Player) sender;
-			if(!this.isLoggedIn(player)){
+			if(!this.manager.isAuthenticated(player)){
 				player.sendMessage(this.getMessage("please-login"));
 				return true;
 			}
 			
-			this.setLoggedOut(player);
-			player.sendMessage(this.getMessage("logged-out"));
+			if(this.manager.deauthenticate(player)){
+				player.sendMessage(this.getMessage("logged-out"));
+			}else{
+				// TODO
+			}
 			return true;
 		}else if(command.getName().equals("cpw")){
 			String target = sender.getName();
@@ -298,7 +273,7 @@ public class GateKeeper extends PluginBase implements Listener{
 				return true;
 			}
 			
-			this.provider.setPlayer(target, hash(target, password));
+			this.manager.changePassword(target, password);
 			sender.sendMessage(this.getMessage("changed-password", target));
 			return true;
 		}
@@ -335,18 +310,6 @@ public class GateKeeper extends PluginBase implements Listener{
 		return null;
 	}
 	
-	public boolean tryLogin(Player player){
-		Map<String, Object> map = this.provider.getPlayer(player);
-		if(map.getOrDefault("lastIP", "127.0.0.1").equals(player.getAddress())
-			&& player.getUniqueId().toString().equals(map.get("uuid"))){
-			this.setLoggedIn(player);
-			
-			return true;
-		}
-		
-		return false;
-	}
-	
 	@EventHandler
 	public void onPreLogin(PlayerPreLoginEvent event){
 		if(!this.getConfig().get("session.single", true)) return; 
@@ -354,7 +317,7 @@ public class GateKeeper extends PluginBase implements Listener{
 		Player player = event.getPlayer();
 		
 		for(Player online : this.getServer().getOnlinePlayers().values()){
-			if(online != player && online.getName().toLowerCase().equals(player.getName().toLowerCase()) && this.isLoggedIn(online)){
+			if(online != player && online.getName().toLowerCase().equals(player.getName().toLowerCase()) && this.manager.isAuthenticated(online)){
 				event.setCancelled();
 				player.kick("already logged in");
 				return;
@@ -366,10 +329,13 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onJoin(PlayerJoinEvent event){
 		Player player = event.getPlayer();
 		
-		this.setLoggedOut(player);
+		if(!this.manager.deauthenticate(player)){
+			player.kick("failed to deauthenticate");
+			return;
+		}
 		
-		if(this.provider.playerExists(player)){
-			if(this.getConfig().getBoolean("auto.login", true) && this.tryLogin(player)){
+		if(this.manager.isRegistered(player.getName())){
+			if(this.getConfig().getBoolean("auto.login", true) && this.manager.tryAuthenticate(player)){
 				player.sendMessage(this.getMessage("logged-in"));
 			}else{
 				player.sendMessage(this.getMessage("login-to-server"));
@@ -386,7 +352,7 @@ public class GateKeeper extends PluginBase implements Listener{
 	
 	@EventHandler
 	public void onChat(PlayerChatEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 			event.getPlayer().sendMessage(this.getMessage("please-login"));
 		}
@@ -396,7 +362,7 @@ public class GateKeeper extends PluginBase implements Listener{
 	@EventHandler
 	public void onCommandPreProcess(PlayerCommandPreprocessEvent event){
 		String message = event.getMessage();
-		if(!this.isLoggedIn(event.getPlayer()) && !this.getConfig().getList("allow.commands", new ArrayList<String>(){
+		if(!this.manager.isAuthenticated(event.getPlayer()) && !this.getConfig().getList("allow.commands", new ArrayList<String>(){
 			{add("login"); add("register"); add("help");}
 		}).contains(message.split(" ")[0].substring(1))){
 			event.setCancelled();
@@ -406,35 +372,35 @@ public class GateKeeper extends PluginBase implements Listener{
 	
 	@EventHandler
 	public void onDrop(PlayerDropItemEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 		}
 	}
 	
 	@EventHandler
 	public void onFoodLevelChange(PlayerFoodLevelChangeEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 		}
 	}
 	
 	@EventHandler
 	public void onItemConsume(PlayerItemConsumeEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 		}
 	}
 	
 	@EventHandler
 	public void onItemHold(PlayerItemHeldEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 		}
 	}
 	
 	@EventHandler
 	public void onMove(PlayerMoveEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			if(!this.getConfig().get("movement.allow-move", false)){
 				event.setCancelled();
 			}
@@ -443,14 +409,14 @@ public class GateKeeper extends PluginBase implements Listener{
 	
 	@EventHandler
 	public void onSneak(PlayerToggleSneakEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 		}
 	}
 	
 	@EventHandler
 	public void onSprint(PlayerToggleSprintEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 		}
 	}
@@ -459,7 +425,7 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onDamage(EntityDamageEvent event){
 		if(event.getEntity() instanceof Player){
 			Player player = (Player) event.getEntity();
-			if(!this.isLoggedIn(player)){
+			if(!this.manager.isAuthenticated(player)){
 				event.setCancelled();
 			}
 		}
@@ -470,7 +436,7 @@ public class GateKeeper extends PluginBase implements Listener{
 		InventoryHolder holder = event.getInventory().getHolder();
 		if(holder instanceof Player){
 			Player player = (Player)holder;
-			if(!this.isLoggedIn(player)){
+			if(!this.manager.isAuthenticated(player)){
 				event.setCancelled();
 			}
 		}
@@ -478,7 +444,7 @@ public class GateKeeper extends PluginBase implements Listener{
 	
 	@EventHandler
 	public void onInventoryOpen(InventoryOpenEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 		}
 	}
@@ -488,7 +454,7 @@ public class GateKeeper extends PluginBase implements Listener{
 		InventoryHolder holder = event.getInventory().getHolder();
 		if(holder instanceof Player){
 			Player player = (Player)holder;
-			if(!this.isLoggedIn(player)){
+			if(!this.manager.isAuthenticated(player)){
 				event.setCancelled();
 			}
 		}
@@ -496,28 +462,28 @@ public class GateKeeper extends PluginBase implements Listener{
 	
 	@EventHandler
 	public void onInventoryOpen(CraftItemEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 		}
 	}
 	
 	@EventHandler
 	public void onInteract(PlayerInteractEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 		}
 	}
 	
 	@EventHandler
 	public void onBreak(BlockBreakEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 		}
 	}
 	
 	@EventHandler
 	public void onPlace(BlockPlaceEvent event){
-		if(!this.isLoggedIn(event.getPlayer())){
+		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 			event.getPlayer().sendMessage(this.getMessage("please-login"));
 		}

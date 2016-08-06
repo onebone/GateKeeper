@@ -23,7 +23,6 @@ import java.util.List;
 
 import cn.nukkit.Player;
 import cn.nukkit.scheduler.PluginTask;
-import cn.nukkit.utils.TextFormat;
 
 public class SendTipTask extends PluginTask<GateKeeper>{
 	private List<Player> players;

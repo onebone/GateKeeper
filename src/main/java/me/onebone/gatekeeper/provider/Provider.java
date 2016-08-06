@@ -24,7 +24,7 @@ import cn.nukkit.Player;
 
 public interface Provider{
 	public void addPlayer(Player player, String hash);
-	public boolean playerExists(Player player);
+	public boolean playerExists(String player);
 	public void setPlayer(String player, String hash);
 	public void setPlayer(Player player, String hash);
 	public void setPlayer(Player player);
