@@ -170,7 +170,7 @@ public class GateKeeper extends PluginBase implements Listener{
 				return true;
 			}
 			
-			if(this.manager.isRegistered(player.getName())){
+			if(!this.manager.isRegistered(player.getName())){
 				sender.sendMessage(this.getMessage("register-to-server"));
 				return true;
 			}
