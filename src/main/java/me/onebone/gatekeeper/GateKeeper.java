@@ -374,6 +374,10 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onDrop(PlayerDropItemEvent event){
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
+
+			if(this.getConfig().get("message.send-login", true)){
+				event.getPlayer().sendMessage(this.getMessage("please-login"));
+			}
 		}
 	}
 	
@@ -388,6 +392,10 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onItemConsume(PlayerItemConsumeEvent event){
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
+
+			if(this.getConfig().get("message.send-login", true)){
+				event.getPlayer().sendMessage(this.getMessage("please-login"));
+			}
 		}
 	}
 	
@@ -395,6 +403,10 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onItemHold(PlayerItemHeldEvent event){
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
+
+			if(this.getConfig().get("message.send-login", true)){
+				event.getPlayer().sendMessage(this.getMessage("please-login"));
+			}
 		}
 	}
 	
@@ -403,6 +415,10 @@ public class GateKeeper extends PluginBase implements Listener{
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			if(!this.getConfig().get("movement.allow-move", false)){
 				event.setCancelled();
+
+				if(this.getConfig().get("message.send-login", true)){
+					event.getPlayer().sendMessage(this.getMessage("please-login"));
+				}
 			}
 		}
 	}
@@ -411,6 +427,10 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onSneak(PlayerToggleSneakEvent event){
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
+
+			if(this.getConfig().get("message.send-login", true)){
+				event.getPlayer().sendMessage(this.getMessage("please-login"));
+			}
 		}
 	}
 	
@@ -418,6 +438,10 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onSprint(PlayerToggleSprintEvent event){
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
+
+			if(this.getConfig().get("message.send-login", true)){
+				event.getPlayer().sendMessage(this.getMessage("please-login"));
+			}
 		}
 	}
 	
@@ -446,6 +470,10 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onInventoryOpen(InventoryOpenEvent event){
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
+
+			if(this.getConfig().get("message.send-login", true)){
+				event.getPlayer().sendMessage(this.getMessage("please-login"));
+			}
 		}
 	}
 	
@@ -478,6 +506,10 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onBreak(BlockBreakEvent event){
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
+
+			if(this.getConfig().get("message.send-login", true)){
+				event.getPlayer().sendMessage(this.getMessage("please-login"));
+			}
 		}
 	}
 	
@@ -485,7 +517,9 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onPlace(BlockPlaceEvent event){
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
-			event.getPlayer().sendMessage(this.getMessage("please-login"));
+			if(this.getConfig().get("message.send-login", true)){
+				event.getPlayer().sendMessage(this.getMessage("please-login"));
+			}
 		}
 	}
 }

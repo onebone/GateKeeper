@@ -5,6 +5,8 @@ password:
   max-length: 20
 auto:
   login: true
+message:
+  send-login: true
 session:
   single: true
 allow:

@@ -4,3 +4,6 @@
 *.bat
 target
 *.html
+
+.idea
+*.iml
