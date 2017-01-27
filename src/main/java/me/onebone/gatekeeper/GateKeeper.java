@@ -279,6 +279,14 @@ public class GateKeeper extends PluginBase implements Listener{
 		}
 		return false;
 	}
+
+	public void sendLoginMessage(Player player){
+		if(this.manager.isRegistered(player.getName())){
+				player.sendMessage(this.getMessage("login-to-server"));
+		}else{
+			player.sendMessage(this.getMessage("register-to-server"));
+		}
+	}
 	
 	public String hash(Player player, String password){
 		return hash(player.getName(), password);
@@ -354,7 +362,7 @@ public class GateKeeper extends PluginBase implements Listener{
 	public void onChat(PlayerChatEvent event){
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
-			event.getPlayer().sendMessage(this.getMessage("please-login"));
+			this.sendLoginMessage(event.getPlayer());
 		}
 	}
 	
@@ -366,7 +374,7 @@ public class GateKeeper extends PluginBase implements Listener{
 			{add("login"); add("register"); add("help");}
 		}).contains(message.split(" ")[0].substring(1))){
 			event.setCancelled();
-			event.getPlayer().sendMessage(this.getMessage("please-login"));
+			this.sendLoginMessage(event.getPlayer());
 		}
 	}
 	
@@ -376,7 +384,7 @@ public class GateKeeper extends PluginBase implements Listener{
 			event.setCancelled();
 
 			if(this.getConfig().get("message.send-login", true)){
-				event.getPlayer().sendMessage(this.getMessage("please-login"));
+				this.sendLoginMessage(event.getPlayer());
 			}
 		}
 	}
@@ -394,7 +402,7 @@ public class GateKeeper extends PluginBase implements Listener{
 			event.setCancelled();
 
 			if(this.getConfig().get("message.send-login", true)){
-				event.getPlayer().sendMessage(this.getMessage("please-login"));
+				this.sendLoginMessage(event.getPlayer());
 			}
 		}
 	}
@@ -405,7 +413,7 @@ public class GateKeeper extends PluginBase implements Listener{
 			event.setCancelled();
 
 			if(this.getConfig().get("message.send-login", true)){
-				event.getPlayer().sendMessage(this.getMessage("please-login"));
+				this.sendLoginMessage(event.getPlayer());
 			}
 		}
 	}
@@ -417,7 +425,7 @@ public class GateKeeper extends PluginBase implements Listener{
 				event.setCancelled();
 
 				if(this.getConfig().get("message.send-login", true)){
-					event.getPlayer().sendMessage(this.getMessage("please-login"));
+					this.sendLoginMessage(event.getPlayer());
 				}
 			}
 		}
@@ -429,7 +437,7 @@ public class GateKeeper extends PluginBase implements Listener{
 			event.setCancelled();
 
 			if(this.getConfig().get("message.send-login", true)){
-				event.getPlayer().sendMessage(this.getMessage("please-login"));
+				this.sendLoginMessage(event.getPlayer());
 			}
 		}
 	}
@@ -440,7 +448,7 @@ public class GateKeeper extends PluginBase implements Listener{
 			event.setCancelled();
 
 			if(this.getConfig().get("message.send-login", true)){
-				event.getPlayer().sendMessage(this.getMessage("please-login"));
+				this.sendLoginMessage(event.getPlayer());
 			}
 		}
 	}
@@ -472,7 +480,7 @@ public class GateKeeper extends PluginBase implements Listener{
 			event.setCancelled();
 
 			if(this.getConfig().get("message.send-login", true)){
-				event.getPlayer().sendMessage(this.getMessage("please-login"));
+				this.sendLoginMessage(event.getPlayer());
 			}
 		}
 	}
@@ -508,7 +516,7 @@ public class GateKeeper extends PluginBase implements Listener{
 			event.setCancelled();
 
 			if(this.getConfig().get("message.send-login", true)){
-				event.getPlayer().sendMessage(this.getMessage("please-login"));
+				this.sendLoginMessage(event.getPlayer());
 			}
 		}
 	}
@@ -518,7 +526,7 @@ public class GateKeeper extends PluginBase implements Listener{
 		if(!this.manager.isAuthenticated(event.getPlayer())){
 			event.setCancelled();
 			if(this.getConfig().get("message.send-login", true)){
-				event.getPlayer().sendMessage(this.getMessage("please-login"));
+				this.sendLoginMessage(event.getPlayer());
 			}
 		}
 	}
